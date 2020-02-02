@@ -1,0 +1,8 @@
+.idea
+
+dist
+*.pyc
+
+tests/project/app_a/fixtures
+tests/project/app_b/fixtures
+tests/project/app_c/fixtures
