@@ -12,7 +12,7 @@ setup(
     author='retxxxirt',
     author_email='retxxirt@gmail.com',
     url='https://github.com/retxxxirt/django-fixtures',
-    keywords=['django', 'django fixtures', 'django-fixtures', 'fixtures', 'tests'],
+    keywords=['django', 'django fixtures', 'django-fixtures', 'fixtures', 'tests', 'unittests'],
     install_requires=['wheel'],
     package_data = {'django_fixtures': ['management/commands/*.py']}
 )
