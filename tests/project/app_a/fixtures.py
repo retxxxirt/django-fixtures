@@ -63,8 +63,8 @@ class PresidentsData(fixtures.JSONFixture, datasets.GeneratedDatasetMixin):
     fixtures = ('app_a.OSMFullData',)
 
     def generate_dataset(self) -> List[int]:
-        return [d['place_id'] for d in OSMData.objects.using(self.database).values('place_id').distinct()]
+        return [d['place_id'] for d in OSMData.objects.values('place_id').distinct()]
 
     def process_dataset_entry(self, place_id: int) -> Tuple[str, str]:
-        osm_data = OSMData.objects.using(self.database).get(place_id=place_id)
+        osm_data = OSMData.objects.get(place_id=place_id)
         return json.loads(osm_data.osm_data)['localname'], osm_data.first_president

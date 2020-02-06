@@ -1,8 +1,10 @@
 from argparse import ArgumentParser
 
+from django.core.management import call_command
 from django.core.management.base import BaseCommand
+from django.test.utils import setup_databases, teardown_databases
 
-from django_fixtures.utilities import create_fixtures
+from django_fixtures.utilities import get_fixtures
 
 
 class Command(BaseCommand):
@@ -15,7 +17,13 @@ class Command(BaseCommand):
         )
 
     def handle(self, *accessors, **options):
+        old_config = setup_databases(0, False)
+
         try:
-            create_fixtures(*accessors)
+            for fixture in get_fixtures(*accessors):
+                fixture.create(), call_command('flush', verbosity=0, interactive=False)
+                self.stdout.write(f'Fixture {fixture.name} has been created.')
         except Exception as exception:
             self.stderr.write(str(exception))
+        finally:
+            teardown_databases(old_config, 0)

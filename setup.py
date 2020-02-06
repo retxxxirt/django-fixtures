@@ -4,7 +4,7 @@ from distutils.core import setup
 setup(
     name='django-fixtures-rx',
     packages=['django_fixtures'],
-    version='0.1.1',
+    version='0.2.0',
     license='MIT',
     description='Advanced django fixtures.',
     long_description=open('README.md').read(),
@@ -14,5 +14,5 @@ setup(
     url='https://github.com/retxxxirt/django-fixtures',
     keywords=['django', 'django fixtures', 'django-fixtures', 'fixtures', 'tests', 'unittests'],
     install_requires=['wheel'],
-    package_data = {'django_fixtures': ['management/commands/*.py']}
+    package_data={'django_fixtures': ['management/commands/*.py']}
 )

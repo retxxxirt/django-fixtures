@@ -1,38 +1,66 @@
+import importlib.util
 import inspect
 import os
-from typing import TYPE_CHECKING, List
+from types import ModuleType
+from typing import List
+from typing import TYPE_CHECKING
 
-from django.core.management import call_command
-from django.db import connections
+from django.apps import apps
 
 from . import exceptions
-from .helpers import *
+from .exceptions import FixturesNotFound
 
 if TYPE_CHECKING:
     from .fixtures import BaseFixture
 
 
-def cleanup_database():
-    database_name = get_database_name()
-    database_path = get_database_path(database_name)
+def snake_case(camel_name: str, divider: str = '-') -> str:
+    snake_case_name = ''
 
-    connections.close_all()
+    for index, symbol in enumerate(camel_name):
+        if symbol.isupper() and index not in [0, len(camel_name) - 1] and not camel_name[index + 1].isupper():
+            snake_case_name += divider
 
-    if database_name in connections._databases:
-        connections._databases.pop(database_name)
+        snake_case_name += symbol.lower()
 
-    if os.path.isfile(database_path):
-        os.remove(database_path)
+    return snake_case_name
 
 
-def prepare_database():
-    cleanup_database()
-    database_name = get_database_name()
+def get_apps_labels() -> List[str]:
+    return [app.label for app in apps.get_app_configs()]
 
-    connections._databases[database_name] = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': get_database_path(database_name),
-    }
+
+def get_app_path(app_label: str) -> str:
+    return apps.get_app_config(app_label).path
+
+
+def get_fixtures_path(app_label: str):
+    return os.path.join(get_app_path(app_label), 'fixtures')
+
+
+def get_fixture_filepath(app_label: str, name: str) -> str:
+    fixtures_path = get_fixtures_path(app_label)
+
+    if not os.path.isdir(fixtures_path):
+        os.mkdir(fixtures_path)
+
+    return os.path.join(fixtures_path, f'{name}.json')
+
+
+def get_fixtures_module(app_label: str) -> ModuleType:
+    try:
+        fixtures_filepath = os.path.sep.join([get_app_path(app_label), 'fixtures.py'])
+        spec = importlib.util.spec_from_file_location(app_label, fixtures_filepath)
+        spec.loader.exec_module(module := importlib.util.module_from_spec(spec))
+    except FileNotFoundError:
+        raise FixturesNotFound(app_label)
+
+    return module
+
+
+def is_fixture_class(class_: type) -> bool:
+    from .fixtures import BaseFixture
+    return hasattr(class_, '__mro__') and BaseFixture in inspect.getmro(class_)
 
 
 def lookup_fixtures(app_label: str = None) -> List['BaseFixture']:
@@ -51,6 +79,20 @@ def lookup_fixtures(app_label: str = None) -> List['BaseFixture']:
     return fixtures
 
 
+def get_fixture(accessor: str) -> 'BaseFixture':
+    app_label, fixture_name = accessor.split('.', 1)
+
+    try:
+        fixtures_module = get_fixtures_module(app_label)
+    except (LookupError, exceptions.FixturesNotFound):
+        raise exceptions.FixtureNotFound(accessor)
+
+    if hasattr(fixtures_module, fixture_name):
+        return getattr(fixtures_module, fixture_name)(app_label)
+    else:
+        raise exceptions.FixtureNotFound(accessor)
+
+
 def get_fixtures(*accessors: str) -> List['BaseFixture']:
     fixtures = [] if accessors else lookup_fixtures()
 
@@ -61,33 +103,6 @@ def get_fixtures(*accessors: str) -> List['BaseFixture']:
 
             fixtures += fixtures_lookup
         else:
-            app_label, fixture_name = accessor.split('.', 1)
-
-            try:
-                fixtures_module = get_fixtures_module(app_label)
-            except (LookupError, exceptions.FixturesNotFound):
-                raise exceptions.FixtureNotFound(accessor)
-
-            if hasattr(fixtures_module, fixture_name):
-                fixtures.append(getattr(fixtures_module, fixture_name)(app_label))
-            else:
-                raise exceptions.FixtureNotFound(accessor)
+            fixtures.append(get_fixture(accessor))
 
     return fixtures
-
-
-def create_fixtures(*accessors: str):
-    prepare_database()
-
-    try:
-        for fixture in get_fixtures(*accessors):
-            call_command('migratefixtures', no_input=True, verbosity=0), fixture.create_fixture()
-            call_command('flush', database=get_database_name(), verbosity=0, interactive=False)
-    except Exception as exception:
-        raise exception
-    finally:
-        cleanup_database()
-
-
-def load_fixtures(*accessors: str) -> dict:
-    return {f'{f.app_label}.{f.name}': d for f in get_fixtures(*accessors) if (d := f.load())}
