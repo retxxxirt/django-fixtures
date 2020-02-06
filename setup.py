@@ -4,7 +4,7 @@ from distutils.core import setup
 setup(
     name='django-fixtures-rx',
     packages=['django_fixtures'],
-    version='0.2.0',
+    version='0.2.1',
     license='MIT',
     description='Advanced django fixtures.',
     long_description=open('README.md').read(),
