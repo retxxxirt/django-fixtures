@@ -61,9 +61,8 @@ class BaseFixture(RequiredFixturesMixin, CommonDatasetMixin, metaclass=ABCMeta):
         self.app_label, self.name = app_label, f'{app_label}.{self.__class__.__name__}'
         self.filepath = get_fixture_filepath(app_label, snake_case(self.__class__.__name__))
 
-    @abstractmethod
     def process_dataset_entry(self, *args, **kwargs) -> Any:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def create(self):

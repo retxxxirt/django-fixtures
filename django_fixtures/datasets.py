@@ -22,7 +22,7 @@ class DictDatasetMixin(CommonDatasetMixin):
 class GeneratedDatasetMixin(CommonDatasetMixin, metaclass=ABCMeta):
     @property
     def dataset(self) -> List[Any]:
-        return self.generate_dataset()
+        return self.generate_dataset() or []
 
     @abstractmethod
     def generate_dataset(self) -> List[Any]:
