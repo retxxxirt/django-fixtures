@@ -5,7 +5,7 @@ from typing import Any, List
 from django.core.management import call_command
 from django.db import DEFAULT_DB_ALIAS
 
-from django_fixtures.datasets import CommonDatasetMixin
+from django_fixtures.dataset import CommonDatasetMixin
 from django_fixtures.utilities import snake_case, get_fixture_filepath, get_fixture
 
 

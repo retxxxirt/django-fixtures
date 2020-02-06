@@ -1,12 +1,12 @@
 import json
 from typing import List, Tuple
 
-from django_fixtures import fixtures, datasets
+from django_fixtures import fixtures, dataset
 from tests.project.app_a.models import OSMData
 from tests.project.helpers import get_osm_data
 
 
-class GeneratedNumbers(datasets.GeneratedDatasetMixin, fixtures.JSONFixture):
+class GeneratedNumbers(dataset.GeneratedDatasetMixin, fixtures.JSONFixture):
     def generate_dataset(self) -> list:
         return [number for number in range(100)]
 
@@ -24,7 +24,7 @@ class OSMBasicData(fixtures.JSONFixture):
         return get_osm_data(place_id)
 
 
-class OSMFullData(fixtures.ModelFixture, datasets.TupleDatasetMixin):
+class OSMFullData(fixtures.ModelFixture, dataset.TupleDatasetMixin):
     models, dataset = (OSMData,), [
         (235471653, 'Oh, say can you see by the dawn\'s early light', 'George Washington'),
         (235707734, 'Listen up! I\'m an American', 'John Alexander Macdonald'),
@@ -43,7 +43,7 @@ class OSMFullData(fixtures.ModelFixture, datasets.TupleDatasetMixin):
         )
 
 
-class OSMAdvancedData(fixtures.ModelFixture, datasets.DictDatasetMixin):
+class OSMAdvancedData(fixtures.ModelFixture, dataset.DictDatasetMixin):
     models, dataset = (OSMData,), [
         {'place_id': 235471653, 'first_president': 'George Washington'},
         {'place_id': 235707734, 'first_president': 'John Alexander Macdonald'},
@@ -59,7 +59,7 @@ class OSMAdvancedData(fixtures.ModelFixture, datasets.DictDatasetMixin):
         return OSMData(place_id=place_id, osm_data=json.dumps(get_osm_data(place_id)), first_president=first_president)
 
 
-class PresidentsData(fixtures.JSONFixture, datasets.GeneratedDatasetMixin):
+class PresidentsData(fixtures.JSONFixture, dataset.GeneratedDatasetMixin):
     fixtures = ('app_a.OSMFullData',)
 
     def generate_dataset(self) -> List[int]:
