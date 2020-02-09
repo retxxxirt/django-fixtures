@@ -6,7 +6,7 @@ from .fixtures import RequiredFixturesMixin, FixturesData
 class FixturesTestCase(TestCase, RequiredFixturesMixin):
     @classmethod
     def setUpClass(cls):
-        initial_fixtures, cls.fixtures = FixturesData(cls.fixtures), []
+        initial_fixtures, cls.fixtures = FixturesData(cls.fixtures or []), []
 
         super().setUpClass()
 
